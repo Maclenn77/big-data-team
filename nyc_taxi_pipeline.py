@@ -71,7 +71,8 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
 
     if "fare_amount" in df.columns and "payment_type" in df.columns:
         revenue_by_payment = (
-            time_enriched.groupBy("payment_type")
+            time_enriched.filter(F.col("fare_amount").isNotNull() & (F.col("fare_amount") >= 0))
+            .groupBy("payment_type")
             .agg(F.sum("fare_amount").alias("total_fare_amount"))
             .orderBy("payment_type")
         )
@@ -84,9 +85,14 @@ def run_pipeline(input_path: str, output_path: str) -> None:
     spark = SparkSession.builder.appName("NYC Taxi Kaggle Pipeline").getOrCreate()
     try:
         # Keep schema inference enabled to support multiple Kaggle NYC taxi CSV formats.
-        trips = spark.read.option("header", "true").option("inferSchema", "true").csv(
-            input_path
-        )
+        try:
+            trips = spark.read.option("header", "true").option("inferSchema", "true").csv(
+                input_path
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"Failed to read CSV input from '{input_path}'. Verify that the path exists and the file is a valid CSV."
+            ) from exc
         standardized = _with_standard_timestamps(trips)
 
         standardized.write.mode("overwrite").parquet(f"{output_path}/cleaned_trips")
