@@ -29,6 +29,9 @@ def _with_standard_timestamps(df: DataFrame) -> DataFrame:
     if dropoff_col:
         df = df.withColumn("dropoff_ts", F.to_timestamp(F.col(dropoff_col)))
 
+    if df.filter(F.col("pickup_ts").isNull()).limit(1).count() > 0:
+        print("Warning: Some rows have invalid pickup timestamps and will be excluded.")
+
     return df.filter(F.col("pickup_ts").isNotNull())
 
 
@@ -70,8 +73,9 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
         )
 
     if "fare_amount" in df.columns and "payment_type" in df.columns:
+        valid_fare_condition = F.col("fare_amount").isNotNull() & (F.col("fare_amount") >= 0)
         revenue_by_payment = (
-            time_enriched.filter(F.col("fare_amount").isNotNull() & (F.col("fare_amount") >= 0))
+            time_enriched.filter(valid_fare_condition)
             .groupBy("payment_type")
             .agg(F.sum("fare_amount").alias("total_fare_amount"))
             .orderBy("payment_type")
