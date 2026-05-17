@@ -36,4 +36,4 @@ The pipeline writes:
 - `trends/trips_by_hour/` (CSV: number of trips grouped by pickup hour)
 - `trends/trips_by_day/` (CSV: number of trips grouped by pickup date)
 - `trends/avg_passenger_by_hour/` (CSV: average passenger count by pickup hour, when available)
-- `trends/revenue_by_payment_type/` (CSV: total fare by payment type, when available)
+- `trends/revenue_by_payment_type/` (CSV: total fare by payment type using non-null, non-negative fares, when available)
