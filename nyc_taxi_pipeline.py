@@ -34,9 +34,12 @@ def _with_standard_timestamps(df: DataFrame) -> DataFrame:
 
 def _write_trends(df: DataFrame, output_path: str) -> None:
     trends_path = f"{output_path}/trends"
+    time_enriched = df.withColumn("pickup_hour", F.hour("pickup_ts")).withColumn(
+        "pickup_date", F.to_date("pickup_ts")
+    )
 
     trips_by_hour = (
-        df.withColumn("pickup_hour", F.hour("pickup_ts"))
+        time_enriched
         .groupBy("pickup_hour")
         .agg(F.count("*").alias("trip_count"))
         .orderBy("pickup_hour")
@@ -46,7 +49,7 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
     )
 
     trips_by_day = (
-        df.withColumn("pickup_date", F.to_date("pickup_ts"))
+        time_enriched
         .groupBy("pickup_date")
         .agg(F.count("*").alias("trip_count"))
         .orderBy("pickup_date")
@@ -57,7 +60,7 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
 
     if "passenger_count" in df.columns:
         avg_passenger_by_hour = (
-            df.withColumn("pickup_hour", F.hour("pickup_ts"))
+            time_enriched
             .groupBy("pickup_hour")
             .agg(F.avg("passenger_count").alias("avg_passenger_count"))
             .orderBy("pickup_hour")
@@ -80,6 +83,7 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
 def run_pipeline(input_path: str, output_path: str) -> None:
     spark = SparkSession.builder.appName("NYC Taxi Kaggle Pipeline").getOrCreate()
     try:
+        # Keep schema inference enabled to support multiple Kaggle NYC taxi CSV formats.
         trips = spark.read.option("header", "true").option("inferSchema", "true").csv(
             input_path
         )
