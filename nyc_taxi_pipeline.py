@@ -71,7 +71,7 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
 
     if "fare_amount" in df.columns and "payment_type" in df.columns:
         revenue_by_payment = (
-            df.groupBy("payment_type")
+            time_enriched.groupBy("payment_type")
             .agg(F.sum("fare_amount").alias("total_fare_amount"))
             .orderBy("payment_type")
         )

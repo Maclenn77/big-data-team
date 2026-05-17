@@ -26,7 +26,7 @@ python nyc_taxi_pipeline.py \
   --output /path/to/output
 ```
 
-> Note: the pipeline uses Spark CSV schema inference (`inferSchema=true`) for flexibility across Kaggle taxi exports. On very large inputs this can increase startup time.
+> Note: the pipeline uses Spark CSV schema inference (`inferSchema=true`) for flexibility across Kaggle taxi exports. On very large inputs this can increase startup time. For recurring production runs, capture a schema once and pass it explicitly in code with `.schema(...)` to reduce startup cost.
 
 ## Output
 
