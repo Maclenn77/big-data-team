@@ -38,7 +38,7 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
     trips_by_hour = (
         df.withColumn("pickup_hour", F.hour("pickup_ts"))
         .groupBy("pickup_hour")
-        .agg(F.count(F.lit(1)).alias("trip_count"))
+        .agg(F.count("*").alias("trip_count"))
         .orderBy("pickup_hour")
     )
     trips_by_hour.write.mode("overwrite").option("header", "true").csv(
@@ -48,7 +48,7 @@ def _write_trends(df: DataFrame, output_path: str) -> None:
     trips_by_day = (
         df.withColumn("pickup_date", F.to_date("pickup_ts"))
         .groupBy("pickup_date")
-        .agg(F.count(F.lit(1)).alias("trip_count"))
+        .agg(F.count("*").alias("trip_count"))
         .orderBy("pickup_date")
     )
     trips_by_day.write.mode("overwrite").option("header", "true").csv(
